@@ -2,6 +2,7 @@
 import pandas as pd
 import numpy as np
 import pulp as plp
+import pytups as pt
 import os
 
 # Load data from excel
@@ -30,6 +31,7 @@ players = rating_df.index.to_numpy()
 prob = plp.LpProblem("SoccerTeamSelection", plp.LpMaximize)
 
 # Binary variables
+
 PlayerAssignment = plp.LpVariable.dicts(
     "PlayerAssignmentInTeam", (players, teams, positions), lowBound=0, cat=plp.LpBinary)
 
