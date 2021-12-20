@@ -30,8 +30,8 @@ players = rating_df.index.to_numpy()
 prob = plp.LpProblem("SoccerTeamSelection", plp.LpMinimize)
 
 # Binary variables
-playerInTeamBin = plp.LpVariable.dicts(
-    "PlayerInTeam", (players, teams, positions), lowBound=0, cat=plp.LpBinary)
+PlayerAssignment = plp.LpVariable.dicts(
+    "PlayerAssignmentInTeam", (players, teams, positions), lowBound=0, cat=plp.LpBinary)
 
 
 def Stage1Build():
@@ -48,31 +48,31 @@ def Stage1Build():
     for t in teams:
         for o in positions:
             # Calculate team rating for each position
-            prob += plp.lpSum(playerInTeamBin[p][t][o] * rating_df.loc[p][o]
+            prob += plp.lpSum(PlayerAssignment[p][t][o] * rating_df.loc[p][o]
                               for p in players) <= TeamPositionRating[o]
 
             # Each position should have the requisite number of players
-            prob += plp.lpSum(playerInTeamBin[p][t][o]
+            prob += plp.lpSum(PlayerAssignment[p][t][o]
                               for p in players) == formation[o]
 
             # Players with negative ratings in positions should not be assigned to those positions
             for p in players:
                 if (rating_df.loc[p][o] < 0):
-                    prob += playerInTeamBin[p][t][o] == 0
+                    prob += PlayerAssignment[p][t][o] == 0
 
         # There should be 8 players in each team
-        prob += plp.lpSum(playerInTeamBin[p][t][o]
+        prob += plp.lpSum(PlayerAssignment[p][t][o]
                           for p in players for o in positions) == numPlayers
 
     # Each player can be assigned to one team and one position only
     for p in players:
-        prob += plp.lpSum(playerInTeamBin[p][t][o]
+        prob += plp.lpSum(PlayerAssignment[p][t][o]
                           for t in teams for o in positions) == 1
 
 
 def Stage2Build():
     global prob
-    prob += prob.objective + plp.lpSum(playerInTeamBin[p][t][o] * 2 * OutOfPosition_df.loc[p][o]
+    prob += prob.objective + plp.lpSum(PlayerAssignment[p][t][o] * 2 * OutOfPosition_df.loc[p][o]
                                        for p in players for t in teams for o in positions), f'Objective'
     # prob.writeLP('soccer.lp')
 
@@ -93,7 +93,7 @@ def Publish():
     for p in players:
         for t in teams:
             for o in positions:
-                if (playerInTeamBin[p][t][o].value()) == 1:
+                if (PlayerAssignment[p][t][o].value()) == 1:
                     result.loc[p]['Team'] = t
                     result.loc[p]['Position'] = o
                     result.loc[p]['Rating'] = rating_df.loc[p][o]
