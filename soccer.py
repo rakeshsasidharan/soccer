@@ -1,8 +1,6 @@
 
 import pandas as pd
-import numpy as np
 import pulp as plp
-import pytups as pt
 import os
 
 # Load data from excel
