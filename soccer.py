@@ -27,7 +27,7 @@ for position in positions:
 players = rating_df.index.to_numpy()
 
 # Problem
-prob = plp.LpProblem("SoccerTeamSelection", plp.LpMinimize)
+prob = plp.LpProblem("SoccerTeamSelection", plp.LpMaximize)
 
 # Binary variables
 PlayerAssignment = plp.LpVariable.dicts(
@@ -49,7 +49,7 @@ def Stage1Build():
         for o in positions:
             # Calculate team rating for each position
             prob += plp.lpSum(PlayerAssignment[p][t][o] * rating_df.loc[p][o]
-                              for p in players) <= TeamPositionRating[o]
+                              for p in players) >= TeamPositionRating[o]
 
             # Each position should have the requisite number of players
             prob += plp.lpSum(PlayerAssignment[p][t][o]
@@ -68,13 +68,6 @@ def Stage1Build():
     for p in players:
         prob += plp.lpSum(PlayerAssignment[p][t][o]
                           for t in teams for o in positions) == 1
-
-
-def Stage2Build():
-    global prob
-    prob += prob.objective + plp.lpSum(PlayerAssignment[p][t][o] * 2 * OutOfPosition_df.loc[p][o]
-                                       for p in players for t in teams for o in positions), f'Objective'
-    # prob.writeLP('soccer.lp')
 
 
 def Solve():
@@ -112,6 +105,5 @@ def Publish():
 
 if __name__ == "__main__":
     Stage1Build()
-    Stage2Build()
     Solve()
     Publish()
