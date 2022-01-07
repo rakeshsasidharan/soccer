@@ -16,7 +16,7 @@ numPlayers = sum(formation.values())
 rating_df = pd.read_excel(
     "PlayerRating.xlsx", sheet_name="Sheet1").set_index('Player')
 
-
+# Used in result report
 OutOfPosition_df = pd.DataFrame()
 
 for position in positions:
@@ -55,9 +55,9 @@ def Stage1Build():
             prob += plp.lpSum(PlayerAssignment[p][t][o]
                               for p in players) == formation[o]
 
-            # Players with negative ratings in positions should not be assigned to those positions
+            # Players with negative/zero ratings in positions should not be assigned to those positions
             for p in players:
-                if (rating_df.loc[p][o] < 0):
+                if (rating_df.loc[p][o] <= 0):
                     prob += PlayerAssignment[p][t][o] == 0
 
         # There should be 8 players in each team
